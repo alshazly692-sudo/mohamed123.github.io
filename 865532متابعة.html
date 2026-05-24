@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الأستاذ | نتائج الطلاب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;700;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #05050a;
+            --panel-glass: rgba(10, 15, 30, 0.65);
+            --panel-border: rgba(99, 102, 241, 0.15);
+            --primary: #6366f1;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --secondary: #06b6d4;
+            --success: #10b981;
+            --danger: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', 'Tajawal', sans-serif; }
+        body {
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(at 0% 0%, rgba(99,102,241,0.15) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(6,182,212,0.12) 0px, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 30px 20px;
+            color: var(--text-main);
+        }
+        .container {
+            width: 100%; max-width: 900px;
+            background: var(--panel-glass);
+            backdrop-filter: blur(25px);
+            border-radius: 32px;
+            padding: 40px;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+        }
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 { font-size: 30px; font-weight: 900; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: var(--text-muted); margin-top: 8px; font-size: 15px; }
+
+        /* شاشة كلمة السر */
+        #loginScreen { text-align: center; padding: 20px 0; }
+        #loginScreen h2 { font-size: 22px; font-weight: 800; margin-bottom: 20px; }
+        input[type="password"] {
+            width: 100%; max-width: 380px; padding: 18px 22px; border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);
+            color: white; font-size: 17px; outline: none; text-align: center; margin-bottom: 20px;
+            font-family: 'Cairo', sans-serif;
+        }
+        input[type="password"]:focus { border-color: var(--primary); box-shadow: 0 0 20px rgba(99,102,241,0.25); }
+        button {
+            border: none; border-radius: 18px; padding: 16px 36px; cursor: pointer;
+            font-size: 17px; font-weight: 700; color: white;
+            background: var(--primary-gradient); box-shadow: 0 8px 25px rgba(99,102,241,0.3);
+            font-family: 'Cairo', sans-serif; transition: all 0.3s;
+        }
+        button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-danger { background: linear-gradient(135deg, #f43f5e, #e11d48); box-shadow: 0 8px 25px rgba(244,63,94,0.3); }
+
+        /* لوحة النتائج */
+        #dashboard { display: none; }
+        .stats-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px; margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 20px; padding: 20px; text-align: center;
+        }
+        .stat-card .num { font-size: 32px; font-weight: 900; }
+        .stat-card .lbl { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
+        .stat-card.blue .num { color: var(--secondary); }
+        .stat-card.green .num { color: var(--success); }
+        .stat-card.red .num { color: var(--danger); }
+        .stat-card.purple .num { color: #a855f7; }
+
+        .toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+        }
+        .toolbar h2 { font-size: 18px; font-weight: 800; }
+        .toolbar-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-sm { padding: 10px 20px; font-size: 14px; border-radius: 14px; }
+        .btn-secondary { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); box-shadow: none; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: rgba(99,102,241,0.1); }
+        th { padding: 14px 16px; text-align: right; font-size: 14px; color: var(--text-muted); font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        td { padding: 14px 16px; font-size: 15px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 13px; font-weight: 700;
+        }
+        .badge-success { background: rgba(16,185,129,0.15); color: #34d399; }
+        .badge-warning { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .badge-danger { background: rgba(244,63,94,0.15); color: #fb7185; }
+
+        .rank { font-size: 18px; }
+        .empty { text-align: center; padding: 50px; color: var(--text-muted); font-size: 16px; }
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+
+        @media(max-width: 600px) {
+            .container { padding: 24px 16px; }
+            th, td { padding: 10px 10px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🦅 لوحة مستر محمد الشاذلي</h1>
+        <p>متابعة نتائج الطلاب في الوقت الفعلي</p>
+    </div>
+
+    <!-- شاشة كلمة السر -->
+    <div id="loginScreen">
+        <h2>🔐 أدخل كلمة السر</h2>
+        <br>
+        <input type="password" id="passInput" placeholder="كلمة السر" onkeydown="if(event.key==='Enter') login()">
+        <br>
+        <button onclick="login()">دخول 🚀</button>
+        <p id="passError" style="color:#f43f5e; margin-top:15px; display:none;">❌ كلمة السر غلط، حاول تاني</p>
+    </div>
+
+    <!-- لوحة النتائج -->
+    <div id="dashboard">
+        <div class="stats-row" id="statsRow"></div>
+
+        <div class="toolbar">
+            <h2>📋 نتائج الطلاب</h2>
+            <div class="toolbar-btns">
+                <button class="btn-sm btn-secondary" onclick="loadResults()">🔄 تحديث</button>
+                <button class="btn-sm btn-danger" onclick="clearResults()">🗑️ مسح الكل</button>
+            </div>
+        </div>
+
+        <div id="tableContainer">
+            <div class="loading">⏳ جاري التحميل...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const PASSWORD = "shadly2025"; // ← غير كلمة السر من هنا
+
+function login() {
+    let pass = document.getElementById("passInput").value;
+    if (pass === PASSWORD) {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        loadResults();
+        // تحديث تلقائي كل 30 ثانية
+        setInterval(loadResults, 30000);
+    } else {
+        document.getElementById("passError").style.display = "block";
+    }
+}
+
+async function loadResults() {
+    try {
+        let keysResult = await window.storage.list("result:", true);
+        let keys = keysResult ? keysResult.keys : [];
+
+        if (keys.length === 0) {
+            document.getElementById("statsRow").innerHTML = "";
+            document.getElementById("tableContainer").innerHTML = '<div class="empty">📭 لا توجد نتائج حتى الآن</div>';
+            return;
+        }
+
+        // جلب كل النتائج
+        let results = [];
+        for (let k of keys) {
+            try {
+                let r = await window.storage.get(k, true);
+                if (r && r.value) results.push(JSON.parse(r.value));
+            } catch(e) {}
+        }
+
+        // ترتيب تنازلي حسب الدرجة
+        results.sort((a, b) => b.pct - a.pct);
+
+        // إحصائيات
+        let avg = Math.round(results.reduce((s, r) => s + r.pct, 0) / results.length);
+        let passed = results.filter(r => r.pct >= 50).length;
+        let failed = results.length - passed;
+        let highest = results[0] ? results[0].pct : 0;
+
+        document.getElementById("statsRow").innerHTML = `
+            <div class="stat-card blue"><div class="num">${results.length}</div><div class="lbl">إجمالي الطلاب</div></div>
+            <div class="stat-card purple"><div class="num">${avg}%</div><div class="lbl">المتوسط العام</div></div>
+            <div class="stat-card green"><div class="num">${passed}</div><div class="lbl">ناجح</div></div>
+            <div class="stat-card red"><div class="num">${failed}</div><div class="lbl">راسب</div></div>
+        `;
+
+        // الجدول
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم الطالب</th>
+                        <th>الدرجة</th>
+                        <th>النسبة</th>
+                        <th>التقدير</th>
+                        <th>الوقت</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        results.forEach((r, i) => {
+            let rank = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1);
+            let badgeClass = r.pct >= 85 ? "badge-success" : r.pct >= 50 ? "badge-warning" : "badge-danger";
+            let grade = r.pct >= 85 ? "ممتاز" : r.pct >= 75 ? "جيد جداً" : r.pct >= 65 ? "جيد" : r.pct >= 50 ? "مقبول" : "ضعيف";
+            html += `
+                <tr>
+                    <td class="rank">${rank}</td>
+                    <td><strong>${r.name}</strong></td>
+                    <td>${r.score} / ${r.total}</td>
+                    <td><strong>${r.pct}%</strong></td>
+                    <td><span class="badge ${badgeClass}">${grade}</span></td>
+                    <td style="color:var(--text-muted); font-size:13px">${r.time}</td>
+                </tr>`;
+        });
+
+        html += "</tbody></table>";
+        document.getElementById("tableContainer").innerHTML = html;
+
+    } catch(e) {
+        document.getElementById("tableContainer").innerHTML = '<div class="empty">❌ خطأ في تحميل البيانات</div>';
+    }
+}
+
+async function clearResults() {
+    if (!confirm("هتمسح نتائج كل الطلاب؟ مش هترجع!")) return;
+    try {
+        let keysResult = await window.storage.list("result:", true);
+        let keys = keysResult ? keysResult.keys : [];
+        for (let k of keys) await window.storage.delete(k, true);
+        loadResults();
+    } catch(e) {}
+}
+</script>
+</body>
+</html>
